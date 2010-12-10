@@ -20,7 +20,7 @@ file(InputGrammar, Options) ->
     validate_params(filename:absname(InputGrammar),
                     filename:absname(OutputFilename)),
     Rslt = parse_grammar(InputGrammar),
-    file:write_file(OutputFilename, Rslt).
+    file:write_file(OutputFilename, prefix(InputGrammar) ++ Rslt ++ suffix()).
 
 validate_params(InputGrammar, OutputFile) when InputGrammar =:= OutputFile ->
     throw({badarg, "Input and output file are the same!"});
@@ -37,4 +37,21 @@ parse_grammar(InputFile) ->
         L when is_list(L) -> L;
         _ -> throw({error, {unknown, grammar, InputFile}})
     end.
+
+prefix(Name) ->
+  [ "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\n",
+    "<html>\n",
+    "<head>\n",
+    "<title>Pegout for " ++ Name ++ "</title>\n",
+    "<script type=\"text/javascript\">\n",
+    "  function toggle(id){\n",
+    "    if(document.getElementById){\n",
+    "    var el = document.getElementById(id);\n",
+    "    el.style.display = (el.style.display == 'none') ? 'block' : 'none';\n",
+    "  }}\n",
+    "</script>\n",
+    "</head>\n<body>\n"].
+    
+suffix() ->
+  [ "</body>\n</html>\n"].
 

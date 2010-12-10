@@ -2,7 +2,7 @@
 
 rules <- space? declaration_sequence space? code_block? space?
 `
-  "<html>\n<kbd>" ++ io_lib:format("~s~n",[lists:flatten(Node)]) ++ "</kbd>\n</html>"
+  io_lib:format("~s~n",[lists:flatten(Node)])
 `;
 
 declaration_sequence <- declaration (space declaration)*
@@ -12,7 +12,13 @@ declaration_sequence <- declaration (space declaration)*
 
 declaration <- nonterminal space '<-' space parsing_expression space? code_block? space? ';'
 `
-  "<font color=\"red\" id=\"" ++ hd(Node) ++ "\">" ++ hd(Node) ++ "</font>" ++ tl(Node)
+  "<kbd><font color=\"red\" id=\"" ++ hd(Node) ++ "\">" ++ hd(Node) ++ "</font>\n" ++ 
+  nth(2,Node) ++ html_escape(nth(3,Node)) ++ nth(4,Node) ++ nth(5,Node) ++ nth(6,Node) ++ "</kbd>" ++
+  case nth(7,Node) of
+    "~" ->  "";
+    _   ->  "<a href=\"javascript:toggle('x_" ++ hd(Node) ++ "_code_')\"><font size=\"-2\" color=\"grey\">Show/Hide Code</font></a>\n" ++
+            "<div id=\"x_" ++ hd(Node) ++ "_code_\" style=\"display: none;\">\n" ++  nth(7,Node) ++ "\n</div>"
+  end ++ nth(8,Node)
 `;
 
 parsing_expression <- choice / sequence / primary ~;
@@ -113,7 +119,7 @@ code_block <- ('`' ('\\`' / '$`' / !'`' .)+ '`') / '~'
 `
   case Node of
     [_, Code, _] -> 
-        "<font color=\"grey\">" ++ nth(1,Node) ++ "<pre>" ++ html_escape(lists:flatten(nth(2,Node))) ++ "</pre>" ++ nth(3,Node) ++ "</font>";
+        "<pre style=\"color:grey\">" ++ nth(1,Node) ++ html_escape(lists:flatten(nth(2,Node))) ++ nth(3,Node) ++ "\n</pre>";
     Else -> html_escape(Else)
   end
 `;
@@ -127,6 +133,6 @@ html_escape([], Acc)    -> lists:reverse(Acc);
 html_escape([$<|T],Acc) -> html_escape(T,[$;,$t,$l,$&|Acc]);
 html_escape([$>|T],Acc) -> html_escape(T,[$;,$t,$g,$&|Acc]);
 html_escape([$"|T],Acc) -> html_escape(T,[$;,$t,$o,$u,$q,$&|Acc]);
-html_escape([$'|T],Acc) -> html_escape(T,[$;,$s,$o,$p,$a,$&|Acc]);
+%html_escape([$'|T],Acc) -> html_escape(T,[$;,$s,$o,$p,$a,$&|Acc]);
 html_escape([H|T],Acc)  -> html_escape(T,[H|Acc]).
 `
